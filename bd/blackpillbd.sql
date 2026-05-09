@@ -110,9 +110,11 @@ CREATE TABLE `sistem_alert` (
 --
 
 CREATE TABLE `usuario` (
-  `id_user` char(36) NOT NULL,
+  `id_user` varchar(36) NOT NULL,
   `email` varchar(100) DEFAULT NULL,
   `nome` varchar(100) DEFAULT NULL,
+  `senha` varchar(100) DEFAULT NULL,
+  `criado_em` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `fk_ficha_med_id_user` char(36) DEFAULT NULL,
   `fk_ficha_med_id_ficha_med` char(36) DEFAULT NULL,
   `fk_remedio_cd_remedio` char(36) DEFAULT NULL
