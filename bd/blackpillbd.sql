@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 29/04/2026 às 20:27
+-- Tempo de geração: 09/05/2026 às 19:40
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -111,8 +111,9 @@ CREATE TABLE `sistem_alert` (
 
 CREATE TABLE `usuario` (
   `id_user` char(36) NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `nome` varchar(100) DEFAULT NULL,
+  `nome` varchar(256) NOT NULL,
+  `email` varchar(256) NOT NULL,
+  `senha` varchar(256) NOT NULL,
   `fk_ficha_med_id_user` char(36) DEFAULT NULL,
   `fk_ficha_med_id_ficha_med` char(36) DEFAULT NULL,
   `fk_remedio_cd_remedio` char(36) DEFAULT NULL
