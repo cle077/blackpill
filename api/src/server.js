@@ -1,13 +1,18 @@
 import express from 'express';
+import path from 'path';
 import dotenv from 'dotenv';
-import authRoutes from './routes/authRoutes.js'; 
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+import authRoutes from './routes/authRoutes.js';
+
 const app = express();
-
 app.use(express.json());
 
-// Suas rotas
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
