@@ -1,19 +1,23 @@
-import { verify } from'../services/jwtService.js'
+import { verify } from '../services/jwtService.js';
 
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-  if (!authHeader?.startsWith('Bearer '))
-    return res.status(401).json({ message: 'Token não fornecido.' });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
+    }
 
-  const token = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1];
 
-  try {
-    req.user = verify(token);
-    next();
-  } catch {
-    res.status(401).json({ message: 'Token inválido ou expirado.' });
-  }
+    try {
+        const decoded = verify(token);
+        
+        req.user = decoded; 
+        
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Token inválido ou expirado.' });
+    }
 };
 
 export default authMiddleware;

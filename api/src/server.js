@@ -1,14 +1,21 @@
+import express from 'express';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
 
-import app from './app.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-if (!process.env.PORT) {
-  console.log("Erro: porta não definida, tente executar 'node src/server.js'");
-  process.exit(1);
-}
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-app.listen(process.env.PORT, () => {
-  console.log("Servidor rodando na porta", process.env.PORT);
+import authRoutes from './routes/authRoutes.js';
+
+const app = express();
+app.use(express.json());
+
+app.use('/api/auth', authRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
-    

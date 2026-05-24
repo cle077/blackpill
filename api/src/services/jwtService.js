@@ -9,4 +9,3 @@ export const sign = (payload) =>
   });
 
 export const verify = (token) => jwt.verify(token, process.env.JWT_SECRET);
-
