@@ -32,11 +32,8 @@ export const register = async (req, res) => {
             [id_user, nome, email, passwordHash]
         );
 
-        const token = sign({ id: id_user });
-
         res.status(201).json({ 
             message: 'Usuário criado com sucesso.',
-            token,
             user: { id: id_user, nome, email }
         });
 
@@ -62,7 +59,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: 'E-mail ou senha inválidos.' });
         }
 
-        const token = sign({ id: user.id_user, email: user.email });
+        const token = sign({ id: user.id_user, email: user.emai });
 
         res.json({ 
             token, 
@@ -91,5 +88,20 @@ export const me = async (req, res) => {
     } catch (err) {
         console.error("ERRO NO ME:", err);
         res.status(500).json({ message: 'Erro interno no servidor.' });
+    }
+};
+
+// POST/auth/logout
+
+export const logout = async(req,res) => {
+    try{
+        res.status(200).json({
+            message:"logout realizado com sucessor"
+        });
+    }
+    catch (err){
+        res.status(500).json({
+            message:"erro interno"
+        });
     }
 };
