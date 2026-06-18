@@ -1,0 +1,12 @@
+# API
+api/node_modules/
+api/avisos.db
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Desenvolvimento
+.vscode/
+.idea/
