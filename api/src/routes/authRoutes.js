@@ -9,5 +9,7 @@ router.post('/login', login);
 router.get('/me', authMiddleware, me);
 router.put('/update', authMiddleware, updateProfile);
 router.put('/update-password', authMiddleware, updatePassword);
+router.post('/logout', authMiddleware, logout);
+router.delete('/delete-account', authMiddleware, deletarConta);
 
 export default router;

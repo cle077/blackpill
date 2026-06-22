@@ -176,3 +176,32 @@ export const updatePassword = async (req, res) => {
         res.status(500).json({ message: 'Erro interno ao alterar senha.' });
     }
 };
+
+// POST /auth/logout
+export const logout = async (req, res) => {
+    try {
+        res.json({ message: 'Logout realizado com sucesso. Remova o token do cliente.' });
+    } catch (err) {
+        console.error("ERRO NO LOGOUT:", err);
+        res.status(500).json({ message: 'Erro interno ao realizar logout.' });
+    }
+};
+
+// DELETE /auth/delete-account
+export const deletarConta = async (req, res) => {
+    try {
+        const id_user = req.user.id;
+
+        const [result] = await db.query('DELETE FROM usuario WHERE id_user = ?', [id_user]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        res.json({ message: 'Sua conta e todos os seus dados foram excluídos permanentemente.' });
+
+    } catch (err) {
+        console.error("ERRO AO DELETAR CONTA:", err);
+        res.status(500).json({ message: 'Erro interno ao deletar conta.' });
+    }
+};
