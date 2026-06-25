@@ -205,3 +205,25 @@ export const deletarConta = async (req, res) => {
         res.status(500).json({ message: 'Erro interno ao deletar conta.' });
     }
 };
+
+// PUT /auth/save-token
+export const salvarPushToken = async (req, res) => {
+    try {
+        const id_user = req.user.id;
+        const { push_token } = req.body;
+
+        if (!push_token) {
+            return res.status(400).json({ message: 'Push token não fornecido.' });
+        }
+
+        await db.query(
+            'UPDATE usuario SET push_token = ? WHERE id_user = ?',
+            [push_token, id_user]
+        );
+
+        res.json({ message: 'Token de notificação salvo com sucesso!' });
+    } catch (err) {
+        console.error("Erro ao salvar push token:", err);
+        res.status(500).json({ message: 'Erro interno ao salvar token.' });
+    }
+};

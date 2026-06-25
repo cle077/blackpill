@@ -11,6 +11,7 @@ CREATE TABLE `usuario` (
   `nome` VARCHAR(256) NOT NULL,
   `email` VARCHAR(256) NOT NULL,
   `senha` VARCHAR(256) NOT NULL,
+  `push_token` VARCHAR(256) DEFAULT NULL,
   
   PRIMARY KEY (`id_user`),
   UNIQUE KEY `unique_email` (`email`)
