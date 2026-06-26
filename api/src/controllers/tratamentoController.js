@@ -131,7 +131,6 @@ export const atualizarTratamento = async (req, res) => {
       return res.status(404).json({ message: 'Tratamento não encontrado.' });
     }
 
-    // remove os remédios e horários antigos pra substituir pelos novos
     await conexao.query(`DELETE FROM tratamento_remedio WHERE fk_tratamento_id = ?`, [id]);
     await conexao.query(`DELETE FROM horario_tratamento WHERE fk_id_tratamento = ?`, [id]);
 
