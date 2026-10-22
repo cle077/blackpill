@@ -1,14 +1,16 @@
 import { Router } from 'express';
-import { buscarRemedios, getRemedioPorId } from '../controllers/remedioController.js';
-import { getBula, getBulaResumo } from '../controllers/bulaController.js';
+
+import {
+  buscarRemedios,
+  getRemedioPorId,
+} from '../controllers/remedioController.js';
+
+import {
+  getBula,
+  getBulaResumo,
+} from '../controllers/bulaController.js';
 
 const router = Router();
-
-router.get('/', (req, res) => {
-  res.json({
-    mensagem: 'Rota de remedios funcionando!'
-  });
-});
 
 router.get('/', buscarRemedios);
 router.get('/:id', getRemedioPorId);
