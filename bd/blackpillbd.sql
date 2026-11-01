@@ -211,6 +211,26 @@ INSERT INTO `usuario` (`id_user`, `nome`, `email`, `senha`) VALUES
 ('bf3331c4-0d36-4555-8323-dc84599efa0d', 'Victor', 'victor@email.com', '$2b$10$p7qTRHYiqQg242wL8Qb6UO0e32OkKpNNu7c4z.9X2hQMVhSQgodby'),
 ('e2659970-a829-42a5-9df1-ed0f98ab3174', 'Celine de Jesus Lial', 'dejesuslialfirminoc@gmail.com', '$2b$10$xUcmsM/b/Qls.PL/JqoDS.eynYkusPEzT1y30ZuOEKs9m3.vvN0RO');
 
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `password_reset_codes`
+--
+
+CREATE TABLE `password_reset_codes` (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  email VARCHAR(255) NOT NULL,
+  code_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  used_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  INDEX idx_reset_email (email, used_at, id)
+);
+
+
 --
 -- Índices para tabelas despejadas
 --
