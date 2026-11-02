@@ -56,7 +56,6 @@ const SEXO_PARA_TELA: Record<string, string> = {
 };
 
 function numeroDaString(valor: string): number {
-  // remove tudo que não for dígito, vírgula ou ponto, e troca vírgula por ponto
   const limpo = valor.replace(/[^\d.,]/g, "").replace(",", ".");
   return parseFloat(limpo);
 }

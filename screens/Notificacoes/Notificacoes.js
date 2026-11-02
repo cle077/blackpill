@@ -36,6 +36,7 @@ export default function Notificacoes({ onVoltar }) {
   const [antecedencia, setAntecedencia] =
     useState("10 minutos");
 
+  
   const [mostrarAntecedencia, setMostrarAntecedencia] =
     useState(false);
 

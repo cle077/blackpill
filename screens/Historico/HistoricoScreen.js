@@ -166,7 +166,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.authBackground,
   },
 
-  /* HEADER — IGUAL À AGENDA */
   header: {
     minHeight: 75,
     justifyContent: "center",

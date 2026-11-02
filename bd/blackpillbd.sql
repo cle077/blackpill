@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 11/09/2026 às 14:33
+-- Tempo de geração: 30/10/2026 às 18:05
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -61,6 +61,21 @@ INSERT INTO `bula` (`id_bula`, `indicacao`, `cont_indicacao`, `posologia`, `reac
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `dose`
+--
+
+CREATE TABLE `dose` (
+  `id_dose` char(36) NOT NULL,
+  `fk_tratamento_remedio` char(36) NOT NULL,
+  `data_prevista` date NOT NULL,
+  `horario_previsto` time NOT NULL,
+  `status` enum('pendente','tomada','pulada') NOT NULL DEFAULT 'pendente',
+  `tomada_em` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `ficha_med`
 --
 
@@ -83,27 +98,27 @@ CREATE TABLE `ficha_med` (
 INSERT INTO `ficha_med` (`id_ficha_med`, `id_user`, `altura`, `peso`, `sexo`, `data_nascimento`, `alergias`, `obs`, `cond_saude`) VALUES
 ('14403be0-4d8b-4eec-97f7-897b5ae9109c', 'bf3331c4-0d36-4555-8323-dc84599efa0d', 1.72, 55.00, 'M', '2008-12-06', NULL, NULL, NULL),
 ('9291d1e2-f44e-4122-9fa0-4012daf26a15', 'e2659970-a829-42a5-9df1-ed0f98ab3174', 1.64, 61.00, 'F', '2008-06-25', 'Etec', '', 'Normal'),
-('df6acd98-2c9f-4c64-a296-90833738d0f3', '401f34c4-4040-40b0-ad88-2c9719b4a406', 1.70, 60.00, 'M', '2008-03-12', 'Betinhas', 'Blablablabla', 'O');
+('df6acd98-2c9f-4c64-a296-90833738d0f3', '401f34c4-4040-40b0-ad88-2c9719b4a406', 1.70, 60.00, 'M', '2008-03-12', 'nhas\n', 'Blablablabla', 'O');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `horario_tratamento`
+-- Estrutura para tabela `horario_remedio`
 --
 
-CREATE TABLE `horario_tratamento` (
+CREATE TABLE `horario_remedio` (
   `id_horario` char(36) NOT NULL,
-  `fk_id_tratamento` char(36) NOT NULL,
+  `fk_tratamento_remedio` char(36) NOT NULL,
   `horario` time NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `lembrete`
+-- Estrutura para tabela `lembrete_legado`
 --
 
-CREATE TABLE `lembrete` (
+CREATE TABLE `lembrete_legado` (
   `id_lembrete` char(36) NOT NULL,
   `fk_usuario_id_user` char(36) NOT NULL,
   `medicamento` varchar(150) NOT NULL,
@@ -114,19 +129,13 @@ CREATE TABLE `lembrete` (
   `notificacao` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
 --
--- Estrutura para tabela `registro_dose`
+-- Despejando dados para a tabela `lembrete_legado`
 --
 
-CREATE TABLE `registro_dose` (
-  `id_registro` char(36) NOT NULL,
-  `fk_id_tratamento` char(36) NOT NULL,
-  `data` date NOT NULL,
-  `horario` time NOT NULL,
-  `confirmado_em` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `lembrete_legado` (`id_lembrete`, `fk_usuario_id_user`, `medicamento`, `horario`, `frequencia`, `dias_semana`, `data_unica`, `notificacao`) VALUES
+('0724a50f-4158-4b3c-9fc5-66d135eb6f06', '124f8061-cda8-4259-8f80-5dd666ccbebe', 'Dipirona', '18:36:00', 'Uma vez', NULL, '2026-10-21', 1),
+('0e0d50aa-d429-4f90-9a73-247f7636a8c7', '401f34c4-4040-40b0-ad88-2c9719b4a406', 'Hh', '04:44:00', 'Dias específicos', '[2,4,1,5]', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -170,11 +179,15 @@ INSERT INTO `remedio` (`cd_remedio`, `fk_bula_id_bula`, `nome`, `fabricante`, `m
 CREATE TABLE `tratamento` (
   `id_tratamento` char(36) NOT NULL,
   `fk_usuario_id_user` char(36) NOT NULL,
-  `nome_tratamento` varchar(100) DEFAULT 'Meu Tratamento',
+  `nome_tratamento` varchar(100) NOT NULL DEFAULT 'Meu Tratamento',
   `data_inicio` date NOT NULL,
-  `data_fim` date DEFAULT NULL,
-  `status_ativo` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `data_fim` date DEFAULT NULL COMMENT 'NULL só em uso contínuo ainda em aberto',
+  `uso_continuo` tinyint(1) NOT NULL DEFAULT 0,
+  `doses_geradas_ate` date DEFAULT NULL COMMENT 'até que dia a agenda (dose) já foi gerada',
+  `status` enum('ativo','concluido','cancelado') NOT NULL DEFAULT 'ativo',
+  `observacao` varchar(255) DEFAULT NULL,
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
+) ;
 
 -- --------------------------------------------------------
 
@@ -183,10 +196,17 @@ CREATE TABLE `tratamento` (
 --
 
 CREATE TABLE `tratamento_remedio` (
+  `id_tratamento_remedio` char(36) NOT NULL,
   `fk_tratamento_id` char(36) NOT NULL,
-  `fk_remedio_cd_remedio` char(36) NOT NULL,
-  `dose` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `fk_remedio_cd_remedio` char(36) DEFAULT NULL COMMENT 'NULL = item fora do catálogo',
+  `nome_personalizado` varchar(150) DEFAULT NULL COMMENT 'usado quando não há remédio do catálogo',
+  `dosagem` varchar(50) NOT NULL,
+  `dias_semana` set('seg','ter','qua','qui','sex','sab','dom') NOT NULL DEFAULT 'seg,ter,qua,qui,sex,sab,dom',
+  `data_inicio` date DEFAULT NULL COMMENT 'NULL = herda do tratamento',
+  `data_fim` date DEFAULT NULL COMMENT 'NULL = herda do tratamento',
+  `instrucoes` varchar(150) DEFAULT NULL,
+  `notificar` tinyint(1) NOT NULL DEFAULT 1
+) ;
 
 -- --------------------------------------------------------
 
@@ -206,10 +226,38 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id_user`, `nome`, `email`, `senha`) VALUES
+('124f8061-cda8-4259-8f80-5dd666ccbebe', 'Raquel Brito', 'brito@gmail.com', '$2b$10$e.7mJSbE37EQHEnxNxboE.XB5FBv0cMSjdhDEIvmxHOK.ZxbT436S'),
 ('401f34c4-4040-40b0-ad88-2c9719b4a406', 'Arthur', 'arthur@email.com', '$2b$10$Wzd24smMn.UYJEui7UvrGe3bc6gL0r8rkTctABYzoDFDFx5ZB.i46'),
+('4c02c329-73c0-43e1-b8f7-d1a43479c272', 'bla bla bla bla', 'teste', '$2b$10$2rBLg0N9.BX4Q573XCsrgOPYwKcVrSCDtF8eg.t5dAONTpAmSM7TC'),
+('79c34bc0-5dcf-4046-b040-78334dc39586', 'Victor Carvalho', 'victorcarvalhodr2000@gmail.com', '$2b$10$qp.ccnh0YvK5QQSRBDZ0T.zGjhn1MuGfculg6O7bQKGLMS35fXl9m'),
 ('89dde165-7e98-45c1-bd22-32f52dfea6a0', 'Arthur2', 'arthur2@email.com', '$2b$10$ryTzeXaHuAkjoamZMoelGurR67ceqi9rCzbYuO27GbmXnk2pDJuE2'),
+('a936d06c-2943-4b9e-9702-80ae271fc6fa', 'Pedro', 'pedro@gmail.com', '$2b$10$MiiXXa92L/nNGcBkyP29ROVnVuWF9fj/YtsF9mXe3hClxAeMiOKT2'),
 ('bf3331c4-0d36-4555-8323-dc84599efa0d', 'Victor', 'victor@email.com', '$2b$10$p7qTRHYiqQg242wL8Qb6UO0e32OkKpNNu7c4z.9X2hQMVhSQgodby'),
 ('e2659970-a829-42a5-9df1-ed0f98ab3174', 'Celine de Jesus Lial', 'dejesuslialfirminoc@gmail.com', '$2b$10$xUcmsM/b/Qls.PL/JqoDS.eynYkusPEzT1y30ZuOEKs9m3.vvN0RO');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura stand-in para view `vw_dia_tratamento`
+-- (Veja abaixo para a visão atual)
+--
+CREATE TABLE `vw_dia_tratamento` (
+`id_tratamento` char(36)
+,`dia` date
+,`total_doses` bigint(21)
+,`doses_tomadas` bigint(20) unsigned
+,`doses_puladas` bigint(20) unsigned
+,`status_dia` varchar(8)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para view `vw_dia_tratamento`
+--
+DROP TABLE IF EXISTS `vw_dia_tratamento`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_dia_tratamento`  AS SELECT `tr`.`fk_tratamento_id` AS `id_tratamento`, `d`.`data_prevista` AS `dia`, count(0) AS `total_doses`, cast(sum(`d`.`status` = 'tomada') as unsigned) AS `doses_tomadas`, cast(sum(`d`.`status` = 'pulada') as unsigned) AS `doses_puladas`, CASE WHEN sum(`d`.`status` = 'tomada') = count(0) THEN 'completo' WHEN sum(`d`.`status` = 'tomada') > 0 THEN 'parcial' WHEN sum(`d`.`status` = 'pulada') = count(0) THEN 'pulado' ELSE 'nenhuma' END AS `status_dia` FROM (`dose` `d` join `tratamento_remedio` `tr` on(`tr`.`id_tratamento_remedio` = `d`.`fk_tratamento_remedio`)) GROUP BY `tr`.`fk_tratamento_id`, `d`.`data_prevista` ;
 
 --
 -- Índices para tabelas despejadas
@@ -222,6 +270,14 @@ ALTER TABLE `bula`
   ADD PRIMARY KEY (`id_bula`);
 
 --
+-- Índices de tabela `dose`
+--
+ALTER TABLE `dose`
+  ADD PRIMARY KEY (`id_dose`),
+  ADD UNIQUE KEY `uq_dose` (`fk_tratamento_remedio`,`data_prevista`,`horario_previsto`),
+  ADD KEY `idx_dose_data_status` (`data_prevista`,`status`);
+
+--
 -- Índices de tabela `ficha_med`
 --
 ALTER TABLE `ficha_med`
@@ -229,25 +285,18 @@ ALTER TABLE `ficha_med`
   ADD UNIQUE KEY `unique_usuario` (`id_user`);
 
 --
--- Índices de tabela `horario_tratamento`
+-- Índices de tabela `horario_remedio`
 --
-ALTER TABLE `horario_tratamento`
+ALTER TABLE `horario_remedio`
   ADD PRIMARY KEY (`id_horario`),
-  ADD KEY `FK_disparo_tratamento` (`fk_id_tratamento`);
+  ADD UNIQUE KEY `uq_horario_remedio` (`fk_tratamento_remedio`,`horario`);
 
 --
--- Índices de tabela `lembrete`
+-- Índices de tabela `lembrete_legado`
 --
-ALTER TABLE `lembrete`
+ALTER TABLE `lembrete_legado`
   ADD PRIMARY KEY (`id_lembrete`),
   ADD KEY `FK_lembrete_usuario` (`fk_usuario_id_user`);
-
---
--- Índices de tabela `registro_dose`
---
-ALTER TABLE `registro_dose`
-  ADD PRIMARY KEY (`id_registro`),
-  ADD UNIQUE KEY `uq_registro_dose` (`fk_id_tratamento`,`data`,`horario`);
 
 --
 -- Índices de tabela `remedio`
@@ -261,14 +310,15 @@ ALTER TABLE `remedio`
 --
 ALTER TABLE `tratamento`
   ADD PRIMARY KEY (`id_tratamento`),
-  ADD KEY `FK_tratamento_usuario` (`fk_usuario_id_user`);
+  ADD KEY `idx_tratamento_usuario_status` (`fk_usuario_id_user`,`status`);
 
 --
 -- Índices de tabela `tratamento_remedio`
 --
 ALTER TABLE `tratamento_remedio`
-  ADD PRIMARY KEY (`fk_tratamento_id`,`fk_remedio_cd_remedio`),
-  ADD KEY `FK_int_remedio` (`fk_remedio_cd_remedio`);
+  ADD PRIMARY KEY (`id_tratamento_remedio`),
+  ADD UNIQUE KEY `uq_tratamento_remedio` (`fk_tratamento_id`,`fk_remedio_cd_remedio`),
+  ADD KEY `idx_tr_remedio` (`fk_remedio_cd_remedio`);
 
 --
 -- Índices de tabela `usuario`
@@ -282,28 +332,28 @@ ALTER TABLE `usuario`
 --
 
 --
+-- Restrições para tabelas `dose`
+--
+ALTER TABLE `dose`
+  ADD CONSTRAINT `FK_dose_tr` FOREIGN KEY (`fk_tratamento_remedio`) REFERENCES `tratamento_remedio` (`id_tratamento_remedio`) ON DELETE CASCADE;
+
+--
 -- Restrições para tabelas `ficha_med`
 --
 ALTER TABLE `ficha_med`
   ADD CONSTRAINT `FK_ficha_usuario` FOREIGN KEY (`id_user`) REFERENCES `usuario` (`id_user`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `horario_tratamento`
+-- Restrições para tabelas `horario_remedio`
 --
-ALTER TABLE `horario_tratamento`
-  ADD CONSTRAINT `FK_disparo_tratamento` FOREIGN KEY (`fk_id_tratamento`) REFERENCES `tratamento` (`id_tratamento`) ON DELETE CASCADE;
+ALTER TABLE `horario_remedio`
+  ADD CONSTRAINT `FK_horario_tr` FOREIGN KEY (`fk_tratamento_remedio`) REFERENCES `tratamento_remedio` (`id_tratamento_remedio`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `lembrete`
+-- Restrições para tabelas `lembrete_legado`
 --
-ALTER TABLE `lembrete`
+ALTER TABLE `lembrete_legado`
   ADD CONSTRAINT `FK_lembrete_usuario` FOREIGN KEY (`fk_usuario_id_user`) REFERENCES `usuario` (`id_user`) ON DELETE CASCADE;
-
---
--- Restrições para tabelas `registro_dose`
---
-ALTER TABLE `registro_dose`
-  ADD CONSTRAINT `FK_registro_tratamento` FOREIGN KEY (`fk_id_tratamento`) REFERENCES `tratamento` (`id_tratamento`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `remedio`
@@ -321,8 +371,8 @@ ALTER TABLE `tratamento`
 -- Restrições para tabelas `tratamento_remedio`
 --
 ALTER TABLE `tratamento_remedio`
-  ADD CONSTRAINT `FK_int_remedio` FOREIGN KEY (`fk_remedio_cd_remedio`) REFERENCES `remedio` (`cd_remedio`) ON DELETE CASCADE,
-  ADD CONSTRAINT `FK_int_tratamento` FOREIGN KEY (`fk_tratamento_id`) REFERENCES `tratamento` (`id_tratamento`) ON DELETE CASCADE;
+  ADD CONSTRAINT `FK_tr_remedio` FOREIGN KEY (`fk_remedio_cd_remedio`) REFERENCES `remedio` (`cd_remedio`),
+  ADD CONSTRAINT `FK_tr_tratamento` FOREIGN KEY (`fk_tratamento_id`) REFERENCES `tratamento` (`id_tratamento`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

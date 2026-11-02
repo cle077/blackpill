@@ -466,6 +466,9 @@ if (telaLembretes) {
               onAddAlarme={() =>
                 setTelaNovoLembrete(true)
               }
+              onVerAgenda={() =>
+                setAbaAtual("agenda")
+              }
               onPressBell={() => {
                 setOrigemNotificacoes("home");
                 setTelaNotificacoes(true);
