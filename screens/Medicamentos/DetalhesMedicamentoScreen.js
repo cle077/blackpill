@@ -1,10 +1,15 @@
-import React from 'react';
+
+import React, { useCallback, useEffect, useState } from 'react';
+
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
+
+import api from '../../services/api';
 
 import colors from '../../theme/colors';
 import radius from '../../theme/radius';
@@ -19,9 +24,106 @@ import NoteCard from '../../components/NoteCard';
 import PrimaryButton from '../../components/PrimaryButton';
 
 export default function DetalhesMedicamentoScreen({
+  medicamento,
   onVoltar,
   onVerBula,
 }) {
+  const [detalhes, setDetalhes] = useState(medicamento || null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+
+  const carregarDetalhes = useCallback(async () => {
+    const id = medicamento?.cd_remedio;
+
+    if (!id) {
+      setErro('Não foi possível identificar o medicamento.');
+      setCarregando(false);
+      return;
+    }
+
+    try {
+      setCarregando(true);
+      setErro('');
+
+      const response = await api.get(`/api/remedios/${id}`);
+
+      setDetalhes(response.data);
+    } catch (error) {
+      console.error(
+        'Erro ao carregar detalhes do medicamento:',
+        error.response?.data || error.message
+      );
+
+      setErro(
+        error.response?.data?.message ||
+          'Não foi possível carregar os detalhes do medicamento.'
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }, [medicamento?.cd_remedio]);
+
+  useEffect(() => {
+    setDetalhes(medicamento || null);
+    carregarDetalhes();
+  }, [medicamento, carregarDetalhes]);
+
+  if (carregando) {
+    return (
+      <View style={styles.screen}>
+        <ScreenHeader
+          title="Detalhes do medicamento"
+          onBack={onVoltar}
+        />
+
+        <View style={styles.estadoContainer}>
+          <ActivityIndicator
+            size="large"
+            color={colors.primary}
+          />
+
+          <Text style={styles.estadoTexto}>
+            Carregando informações do medicamento...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (erro || !detalhes) {
+    return (
+      <View style={styles.screen}>
+        <ScreenHeader
+          title="Detalhes do medicamento"
+          onBack={onVoltar}
+        />
+
+        <View style={styles.estadoContainer}>
+          <Text style={styles.erroTitulo}>
+            Não foi possível carregar
+          </Text>
+
+          <Text style={styles.estadoTexto}>
+            {erro || 'Medicamento não encontrado.'}
+          </Text>
+
+          <View style={styles.botaoErro}>
+            <PrimaryButton
+              label="Tentar novamente"
+              onPress={carregarDetalhes}
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  const nome = detalhes.nome || 'Nome não informado';
+
+  const concentracao = detalhes.concentracao
+    ? ` ${detalhes.concentracao}`
+    : '';
+
   return (
     <ScrollView
       style={styles.screen}
@@ -35,10 +137,14 @@ export default function DetalhesMedicamentoScreen({
 
       <View style={styles.topCard}>
         <MedicationSummary
-          name="Dipirona 500mg"
-          form="Comprimido"
+          name={`${nome}${concentracao}`}
+          form={
+            detalhes.forma_farmaceutica ||
+            detalhes.forma ||
+            'Forma não informada'
+          }
         >
-          <StatusTag label="Tratamento Ativo" />
+          <StatusTag label="Informações do medicamento" />
         </MedicationSummary>
       </View>
 
@@ -47,48 +153,43 @@ export default function DetalhesMedicamentoScreen({
         items={[
           {
             label: 'Fabricante',
-            value: 'EMS',
+            value: detalhes.fabricante || 'Não informado',
           },
           {
             label: 'Marca',
-            value: 'Novalgina',
+            value: detalhes.marca || 'Não informada',
           },
           {
             label: 'Concentração',
-            value: '500 mg',
+            value: detalhes.concentracao || 'Não informada',
           },
           {
             label: 'Tarja',
-            value: 'Vermelha',
-            danger: true,
-          },
-          {
-            label: 'Doses',
-            value: '30 comprimidos',
+            value: detalhes.tarja || 'Não informada',
+            danger: Boolean(detalhes.tarja),
           },
           {
             label: 'DCB',
-            value: 'Metamizol',
+            value: detalhes.dcb || 'Não informada',
           },
         ]}
       />
 
       <View style={styles.noteWrap}>
         <NoteCard
-          icon={
-            <Text style={styles.noteIconText}>
-              i
-            </Text>
+          icon={<Text style={styles.noteIconText}>i</Text>}
+          title="Sobre o medicamento"
+          text={
+            detalhes.descricao ||
+            'Consulte a bula para conhecer as indicações, as orientações de uso e os cuidados relacionados a este medicamento.'
           }
-          title="Sobre o Medicamento"
-          text="Analgésico e antitérmico indicado para dores moderadas a intensas e febre."
         />
       </View>
 
       <View style={styles.actions}>
         <PrimaryButton
           label="Ver bula"
-          onPress={onVerBula}
+          onPress={() => onVerBula?.(detalhes)}
         />
 
         <PrimaryButton
@@ -112,29 +213,56 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing['2xl'],
-    paddingBottom: spacing['4xl'],
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
 
   topCard: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius['2xl'],
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
   },
 
   noteWrap: {
-    marginBottom: spacing.xl + 2,
+    marginTop: spacing.md,
   },
 
   noteIconText: {
-    color: colors.card,
+    fontSize: 20,
     fontWeight: '700',
-    fontSize: typography.size.sm - 1,
+    color: colors.primary,
   },
 
   actions: {
-    gap: spacing.md - 2,
+    marginTop: spacing.lg,
+    gap: spacing.md,
+  },
+
+  estadoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+
+  estadoTexto: {
+    marginTop: spacing.md,
+    fontSize: 16,
+    color: colors.text,
+    textAlign: 'center',
+  },
+
+  erroTitulo: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+
+  botaoErro: {
+    width: '100%',
+    marginTop: spacing.lg,
   },
 });

@@ -2,6 +2,12 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../config/database.js';
 import { hash, compare } from '../services/hashService.js';
 import { sign } from '../services/jwtService.js';
+import {
+  createHash,
+  randomInt,
+  timingSafeEqual,
+} from 'node:crypto';
+import { enviarCodigoRecuperacao } from '../services/emailService.js';
 
 // POST /auth/register
 export const register = async (req, res) => {
@@ -226,4 +232,171 @@ export const salvarPushToken = async (req, res) => {
         console.error("Erro ao salvar push token:", err);
         res.status(500).json({ message: 'Erro interno ao salvar token.' });
     }
+};
+
+// POST /api/auth/forgot-password
+const gerarHashCodigo = (codigo) =>
+  createHash('sha256').update(codigo).digest('hex');
+
+export const solicitarRecuperacaoSenha = async (req, res) => {
+  try {
+    const email = String(req.body.email || '')
+      .trim()
+      .toLowerCase();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({
+        message: 'Informe um e-mail válido.',
+      });
+    }
+
+    const [usuarios] = await db.query(
+      'SELECT id_user, email FROM usuario WHERE email = ?',
+      [email]
+    );
+
+    if (usuarios.length === 0) {
+      return res.json({
+        message:
+          'Se o e-mail estiver cadastrado, você receberá um código.',
+      });
+    }
+
+    const codigo = String(randomInt(0, 1000000)).padStart(6, '0');
+    const codeHash = gerarHashCodigo(codigo);
+
+    await db.query(
+      `UPDATE password_reset_codes
+       SET used_at = NOW()
+       WHERE email = ? AND used_at IS NULL`,
+      [email]
+    );
+
+    await db.query(
+      `INSERT INTO password_reset_codes
+       (email, code_hash, expires_at)
+       VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))`,
+      [email, codeHash]
+    );
+
+    await enviarCodigoRecuperacao(email, codigo);
+
+    return res.json({
+      message:
+        'Se o e-mail estiver cadastrado, você receberá um código.',
+    });
+  } catch (error) {
+    console.error('Erro ao solicitar recuperação de senha:', error);
+
+    return res.status(500).json({
+      message: 'Não foi possível processar a solicitação.',
+    });
+  }
+};
+
+// POST /api/auth/reset-password
+export const redefinirSenha = async (req, res) => {
+  try {
+    const email = String(req.body.email || '')
+      .trim()
+      .toLowerCase();
+
+    const codigo = String(req.body.codigo || '').trim();
+    const novaSenha = String(req.body.novaSenha || '');
+
+    if (
+      !email ||
+      !/^\d{6}$/.test(codigo) ||
+      !novaSenha
+    ) {
+      return res.status(400).json({
+        message: 'Informe o e-mail, o código e a nova senha.',
+      });
+    }
+
+    const senhaRegex =
+      /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/;
+
+    if (!senhaRegex.test(novaSenha)) {
+      return res.status(400).json({
+        message:
+          'A senha deve ter pelo menos 8 caracteres, incluir um número e um caractere especial.',
+      });
+    }
+
+    const [codigos] = await db.query(
+      `SELECT id, code_hash, attempts
+       FROM password_reset_codes
+       WHERE email = ?
+         AND used_at IS NULL
+         AND expires_at > NOW()
+         AND attempts < 5
+       ORDER BY id DESC
+       LIMIT 1`,
+      [email]
+    );
+
+    if (codigos.length === 0) {
+      return res.status(400).json({
+        message: 'Código inválido ou expirado. Solicite outro código.',
+      });
+    }
+
+    const registro = codigos[0];
+    const hashRecebido = Buffer.from(gerarHashCodigo(codigo), 'hex');
+    const hashArmazenado = Buffer.from(registro.code_hash, 'hex');
+
+    const codigoValido =
+      hashRecebido.length === hashArmazenado.length &&
+      timingSafeEqual(hashRecebido, hashArmazenado);
+
+    if (!codigoValido) {
+      await db.query(
+        `UPDATE password_reset_codes
+         SET attempts = attempts + 1,
+             used_at = IF(attempts + 1 >= 5, NOW(), used_at)
+         WHERE id = ?`,
+        [registro.id]
+      );
+
+      return res.status(400).json({
+        message: 'Código inválido ou expirado.',
+      });
+    }
+
+    const [usuarios] = await db.query(
+      'SELECT id_user FROM usuario WHERE email = ?',
+      [email]
+    );
+
+    if (usuarios.length === 0) {
+      return res.status(400).json({
+        message: 'Não foi possível redefinir a senha.',
+      });
+    }
+
+    const novoHash = await hash(novaSenha);
+
+    await db.query(
+      'UPDATE usuario SET senha = ? WHERE id_user = ?',
+      [novoHash, usuarios[0].id_user]
+    );
+
+    await db.query(
+      `UPDATE password_reset_codes
+       SET used_at = NOW()
+       WHERE email = ? AND used_at IS NULL`,
+      [email]
+    );
+
+    return res.json({
+      message: 'Senha redefinida com sucesso.',
+    });
+  } catch (error) {
+    console.error('Erro ao redefinir senha:', error);
+
+    return res.status(500).json({
+      message: 'Não foi possível redefinir a senha.',
+    });
+  }
 };

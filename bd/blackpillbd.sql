@@ -238,6 +238,26 @@ INSERT INTO `usuario` (`id_user`, `nome`, `email`, `senha`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `password_reset_codes`
+--
+
+CREATE TABLE `password_reset_codes` (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  email VARCHAR(255) NOT NULL,
+  code_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  used_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  INDEX idx_reset_email (email, used_at, id)
+);
+
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura stand-in para view `vw_dia_tratamento`
 -- (Veja abaixo para a visão atual)
 --

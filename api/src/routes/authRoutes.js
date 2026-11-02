@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import{ register, login, me, updateProfile, updatePassword, logout, deletarConta, salvarPushToken } from'../controllers/authController.js';
+import{ register, login, me, updateProfile, updatePassword, logout, deletarConta, salvarPushToken, solicitarRecuperacaoSenha, redefinirSenha, } from'../controllers/authController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = Router();
@@ -12,5 +12,7 @@ router.put('/update-password', authMiddleware, updatePassword);
 router.post('/logout', authMiddleware, logout);
 router.delete('/delete-account', authMiddleware, deletarConta);
 router.put('/save-token', authMiddleware, salvarPushToken);
+router.post('/forgot-password', solicitarRecuperacaoSenha);
+router.post('/reset-password', redefinirSenha);
 
 export default router;

@@ -1,6 +1,14 @@
 import { Router } from 'express';
-import { buscarRemedios, getRemedioPorId } from '../controllers/remedioController.js';
-import { getBula, getBulaResumo } from '../controllers/bulaController.js';
+
+import {
+  buscarRemedios,
+  getRemedioPorId,
+} from '../controllers/remedioController.js';
+
+import {
+  getBula,
+  getBulaResumo,
+} from '../controllers/bulaController.js';
 
 const router = Router();
 
