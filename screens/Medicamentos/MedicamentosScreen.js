@@ -14,9 +14,9 @@ import typography from '../../theme/typography';
 import EmptyState from '../../components/EmptyState';
 
 export default function MedicamentosScreen({
-  onAddMedicamento,
+  onCriarTratamento,
 }) {
-  const medicamentos = [];
+  const tratamentos = [];
 
   return (
     <View style={styles.screen}>
@@ -36,12 +36,12 @@ export default function MedicamentosScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {medicamentos.length === 0 && (
+        {tratamentos.length === 0 && (
           <EmptyState
             image={require('../../assets/empty-medications.png')}
-            text="Nenhum medicamento adicionado"
-            buttonLabel="Adicionar medicamento"
-            onPress={onAddMedicamento}
+            text="Nenhum tratamento adicionado"
+            buttonLabel="Adicionar tratamento"
+            onPress={onCriarTratamento}
           />
         )}
       </ScrollView>
