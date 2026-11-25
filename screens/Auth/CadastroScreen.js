@@ -9,9 +9,16 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../../services/api';
 import colors from '../../theme/colors';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function CadastroScreen({
   onVoltarLogin,
@@ -22,6 +29,7 @@ export default function CadastroScreen({
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [ocultarSenha, setOcultarSenha] = useState(true);
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -85,101 +93,129 @@ export default function CadastroScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerBackground}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Image
-              source={require('../../assets/logo.png')}
-              style={styles.logo}
-            />
-          </View>
-        </View>
-
-        <Text style={styles.welcomeText}>Bem-Vindo</Text>
-      </View>
-
-      <View style={styles.cardContainer}>
-        <Text style={styles.registerTitle}>Cadastro</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Nome Completo"
-          placeholderTextColor={colors.placeholder}
-          value={nome}
-          onChangeText={setNome}
-          editable={!loading}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.placeholder}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!loading}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor={colors.placeholder}
-          value={senha}
-          onChangeText={setSenha}
-          secureTextEntry
-          editable={!loading}
-        />
-
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={[
-              styles.checkbox,
-              aceitouTermos && styles.checkboxChecked,
-            ]}
-            onPress={() => setAceitouTermos(!aceitouTermos)}
-            disabled={loading}
-          >
-            {aceitouTermos && <View style={styles.checkboxCheck} />}
-          </TouchableOpacity>
-
-          <Text style={styles.checkboxLabel}>
-            Li e concordo com os{' '}
-            <Text style={styles.linkText} onPress={onAbrirTermos}>
-              Termos de Uso
-            </Text>{' '}
-            e a{' '}
-            <Text style={styles.linkText} onPress={onAbrirPrivacidade}>
-              Política de Privacidade
-            </Text>
-            .
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleCadastro}
-          disabled={loading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {loading ? (
-            <ActivityIndicator color={colors.card} />
-          ) : (
-            <Text style={styles.buttonText}>Cadastrar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View style={styles.headerBackground}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Image
+                  source={require('../../assets/logo.png')}
+                  style={styles.logo}
+                />
+              </View>
+            </View>
 
-      <View style={styles.footerContainer}>
-        <Text style={styles.footerText}>
-          Já tem uma conta?{' '}
-          <Text
-            style={styles.loginText}
-            onPress={loading ? null : onVoltarLogin}
-          >
-            Login
-          </Text>
-        </Text>
-      </View>
+            <Text style={styles.welcomeText}>Bem-Vindo</Text>
+          </View>
+
+          <View style={styles.cardContainer}>
+            <Text style={styles.registerTitle}>Cadastro</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Nome Completo"
+              placeholderTextColor={colors.placeholder}
+              value={nome}
+              onChangeText={setNome}
+              editable={!loading}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
+
+            {/* Campo de senha com botão de visualizar */}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Senha"
+                placeholderTextColor={colors.placeholder}
+                value={senha}
+                onChangeText={setSenha}
+                secureTextEntry={ocultarSenha}
+                autoCapitalize="none"
+                editable={!loading}
+              />
+
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setOcultarSenha(!ocultarSenha)}
+                disabled={loading}
+              >
+                <Ionicons
+                  name={ocultarSenha ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={colors.placeholder}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.checkbox,
+                  aceitouTermos && styles.checkboxChecked,
+                ]}
+                onPress={() => setAceitouTermos(!aceitouTermos)}
+                disabled={loading}
+              >
+                {aceitouTermos && <View style={styles.checkboxCheck} />}
+              </TouchableOpacity>
+
+              <Text style={styles.checkboxLabel}>
+                Li e concordo com os{' '}
+                <Text style={styles.linkText} onPress={onAbrirTermos}>
+                  Termos de Uso
+                </Text>{' '}
+                e a{' '}
+                <Text style={styles.linkText} onPress={onAbrirPrivacidade}>
+                  Política de Privacidade
+                </Text>
+                .
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleCadastro}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.card} />
+              ) : (
+                <Text style={styles.buttonText}>Cadastrar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>
+              Já tem uma conta?{' '}
+              <Text
+                style={styles.loginText}
+                onPress={loading ? null : onVoltarLogin}
+              >
+                Login
+              </Text>
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -190,9 +226,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.authBackground,
   },
 
+  scrollContent: {
+    minHeight: SCREEN_HEIGHT,
+  },
+
   headerBackground: {
     backgroundColor: colors.authPrimary,
-    height: '45%',
+    height: SCREEN_HEIGHT * 0.45,
     borderBottomLeftRadius: 180,
     borderBottomRightRadius: 180,
     alignItems: 'center',
@@ -266,6 +306,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    backgroundColor: colors.inputBackground,
+    marginBottom: 15,
+  },
+
+  passwordInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 16,
+    color: colors.inputText,
+  },
+
+  eyeIcon: {
+    paddingLeft: 10,
+  },
+
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -330,7 +393,7 @@ const styles = StyleSheet.create({
 
   footerContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 4,
     left: 0,
     right: 0,
     alignItems: 'center',

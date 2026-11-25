@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import api from '../../services/api';
 import colors from '../../theme/colors';
@@ -25,6 +25,9 @@ export default function RecSenhaScreen({ onVoltarLogin }) {
   const [codigo, setCodigo] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+
+  const [ocultarNovaSenha, setOcultarNovaSenha] = useState(true);
+  const [ocultarConfirmarSenha, setOcultarConfirmarSenha] = useState(true);
 
   const [loading, setLoading] = useState(false);
 
@@ -122,11 +125,13 @@ export default function RecSenhaScreen({ onVoltarLogin }) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerBar}>
             <TouchableOpacity
@@ -213,31 +218,59 @@ export default function RecSenhaScreen({ onVoltarLogin }) {
 
                   <Text style={styles.inputLabel}>Nova senha</Text>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Digite a nova senha"
-                    placeholderTextColor={colors.placeholder}
-                    value={novaSenha}
-                    onChangeText={setNovaSenha}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    editable={!loading}
-                  />
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="Digite a nova senha"
+                      placeholderTextColor={colors.placeholder}
+                      value={novaSenha}
+                      onChangeText={setNovaSenha}
+                      secureTextEntry={ocultarNovaSenha}
+                      autoCapitalize="none"
+                      editable={!loading}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.eyeIcon}
+                      onPress={() => setOcultarNovaSenha(!ocultarNovaSenha)}
+                      disabled={loading}
+                    >
+                      <Ionicons
+                        name={ocultarNovaSenha ? 'eye-off' : 'eye'}
+                        size={22}
+                        color={colors.placeholder}
+                      />
+                    </TouchableOpacity>
+                  </View>
 
                   <Text style={styles.inputLabel}>
                     Confirmar nova senha
                   </Text>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Repita a nova senha"
-                    placeholderTextColor={colors.placeholder}
-                    value={confirmarSenha}
-                    onChangeText={setConfirmarSenha}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    editable={!loading}
-                  />
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="Repita a nova senha"
+                      placeholderTextColor={colors.placeholder}
+                      value={confirmarSenha}
+                      onChangeText={setConfirmarSenha}
+                      secureTextEntry={ocultarConfirmarSenha}
+                      autoCapitalize="none"
+                      editable={!loading}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.eyeIcon}
+                      onPress={() => setOcultarConfirmarSenha(!ocultarConfirmarSenha)}
+                      disabled={loading}
+                    >
+                      <Ionicons
+                        name={ocultarConfirmarSenha ? 'eye-off' : 'eye'}
+                        size={22}
+                        color={colors.placeholder}
+                      />
+                    </TouchableOpacity>
+                  </View>
 
                   <TouchableOpacity
                     style={styles.button}
@@ -307,7 +340,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 24,
+    paddingBottom: 30,
   },
   headerBar: {
     height: 50,
@@ -325,7 +358,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 30,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   logoCircle: {
     width: 100,
@@ -376,6 +409,27 @@ const styles = StyleSheet.create({
     color: colors.authText,
     fontSize: 15,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    minHeight: 50,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: '#D8DDE3',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 18,
+  },
+  passwordInput: {
+    flex: 1,
+    height: '100%',
+    color: colors.authText,
+    fontSize: 15,
+  },
+  eyeIcon: {
+    paddingLeft: 10,
+  },
   button: {
     minHeight: 50,
     backgroundColor: colors.authPrimary,
@@ -405,7 +459,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 10,
     padding: 16,
-    marginTop: 24,
+    marginTop: 10,
   },
   alertTitle: {
     fontSize: 15,
