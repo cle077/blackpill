@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors'; 
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -15,6 +16,7 @@ import remedioRoutes from './routes/remedioRoutes.js';
 import lembreteRoutes from './routes/lembreteRoutes.js';
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {

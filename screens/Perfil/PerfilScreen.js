@@ -290,8 +290,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  /* CABEÇALHO PADRONIZADO */
-
   header: {
     height: 75,
 

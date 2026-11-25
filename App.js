@@ -507,7 +507,12 @@ export default function App() {
         <View style={styles.mainContent}>
           {abaAtual === "inicio" && (
             <HomeScreen
-              onAddAlarme={() => setTelaNovoLembrete(true)}
+              onAddAlarme={() =>
+                setTelaNovoLembrete(true)
+              }
+              onVerAgenda={() =>
+                setAbaAtual("agenda")
+              }
               onPressBell={() => {
                 setOrigemNotificacoes("home");
                 setTelaNotificacoes(true);
